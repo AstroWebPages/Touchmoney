@@ -16,34 +16,52 @@ p{color:var(--muted);margin-top:1rem}
 #minus{margin-top:2rem;width:84px;height:84px;border-radius:50%;border:0;background:#dc2626;color:#fff;font-size:3rem;line-height:1;font-weight:700;cursor:pointer;touch-action:manipulation}
 #minus:active{transform:scale(.92)}
 .minus{color:#dc2626}
+#hb{position:fixed;top:calc(env(safe-area-inset-top,0px) + 12px);left:12px;padding:8px 14px;border-radius:999px;border:1px solid var(--muted);background:var(--bg);color:var(--fg);font-size:.9rem;cursor:pointer;touch-action:manipulation}
+#modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;padding:16px;box-sizing:border-box;z-index:20;cursor:default}
+#modal.open{display:flex}
+#panel{background:var(--bg);color:var(--fg);border-radius:16px;width:100%;max-width:380px;max-height:80vh;display:flex;flex-direction:column;padding:16px;box-sizing:border-box;text-align:left}
+#panel header{display:flex;justify-content:space-between;align-items:center;font-weight:700;margin-bottom:10px}
+#x{border:0;background:none;color:var(--fg);font-size:1.5rem;line-height:1;cursor:pointer}
+#h{overflow-y:auto;font-size:.95rem;line-height:1.8;font-variant-numeric:tabular-nums}
+#h:empty::before{content:"Aún no hay toques";color:var(--muted)}
+#h .a{color:var(--accent)}
+#h .r{color:#dc2626}
 .plus{position:fixed;color:var(--accent);font-weight:700;font-size:1.5rem;pointer-events:none;animation:up .7s forwards}
 @keyframes up{to{transform:translateY(-70px);opacity:0}}
 </style>
 </head>
 <body>
+<button id="hb">🕒 Historial (0)</button>
+<div id="modal"><div id="panel"><header><span>Historial de toques</span><button id="x" aria-label="Cerrar">×</button></header><div id="h"></div></div></div>
 <div id="n">0.00$</div>
 <div id="t">Toques: 0</div>
 <p>Toca la pantalla</p>
 <button id="minus" aria-label="Restar 0.50">−</button>
 <script>
-let cents=0,taps=0;const n=document.getElementById('n'),t=document.getElementById('t');
+let cents=0,taps=0;const n=document.getElementById('n'),t=document.getElementById('t'),h=document.getElementById('h'),hb=document.getElementById('hb'),modal=document.getElementById('modal');
 function change(d,e,cls){
   cents+=d*50;taps+=d;
   n.textContent=(cents/100).toFixed(2)+'$';
   t.textContent='Toques: '+taps;
+  const row=document.createElement('div');row.className=d>0?'a':'r';
+  row.textContent=(d>0?'+0.50':'−0.50')+'  '+new Date().toLocaleTimeString('es',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  h.prepend(row);hb.textContent='🕒 Historial ('+h.children.length+')';
   n.classList.add('pop');setTimeout(()=>n.classList.remove('pop'),80);
   const s=document.createElement('div');s.className='plus '+cls;s.textContent=d>0?'+0.50':'−0.50';
   s.style.left=(e.clientX-24)+'px';s.style.top=(e.clientY-24)+'px';
   document.body.appendChild(s);setTimeout(()=>s.remove(),700);
 }
 document.addEventListener('pointerdown',e=>{
-  if(e.target.closest('#minus'))return;
+  if(e.target.closest('#minus,#hb,#modal'))return;
   change(1,e,'');
 });
 document.getElementById('minus').addEventListener('pointerdown',e=>{
   e.stopPropagation();
   change(-1,e,'minus');
 });
+hb.addEventListener('click',()=>modal.classList.add('open'));
+document.getElementById('x').addEventListener('click',()=>modal.classList.remove('open'));
+modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('open');});
 </script>
 </body>
 </html>
